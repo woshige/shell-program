@@ -1,0 +1,218 @@
+1、什么是shell
+         shell就是一个命令的解释器，在操作系统的最外层，负责和用户进行对话，将用户的指令解释给操作系统，并将处理的结果输出到屏幕。
+         种类：分为交互式（平常的登录xshell）和非交互式（就是执行一个脚本）两种。
+2、shell脚本
+         系统命令+特定格式+特定语法
+3、shell脚本的用途：
+4、shell脚本的执行的方式
+	     sh是bash的软链接  （1）bash （2）./
+	     如果在脚本中不写 #!/bin/bash  ./执行的方式是按照bash进行执行的，但是是需要权限的。
+	     如果写了的话，执行的时候按照写的解释器执行的。
+5、变量
+         变量：利用固定的字符串去表示一个变化的指，便于后面的使用。
+         命名规则：字符、数字、下划线 尽量字母开头，赋值的时候=号左右不能有空格。
+         eg：HostName=$(hostname)   echo $HostName
+         shell定义变量的方式：
+                  （1）人为进行定义，当前的shell有效  HostName=$(hostname) var="hello shell" 将变量变为一个整体，echo ${var}_log  如果是
+                       $var_log 会将var_log看成一个参数，并不会拼接。
+                  （2）系统变量 echo $SHELL 全局的变量，shell和子shell都可以使用
+                        $HOSTNAME 用户主机名 $PWD 用户当前家目录 $SSH_CONNECTION  $HOME  家目录
+                        如果系统环境变量不能满足要求的时候，可以自己定义（满足各个shell都能使用这个系统的变量）。 
+                        eg：  
+                           var2=hello
+                           bash
+                           vim env.sh
+                           echo $var2
+                           bash env.sh
+                           为空？是因为没有变量变为环境变量，bash env.sh 就是新建一个子shell来执行，所有访问不到，要想使用，export var1即可。
+                  （3）位置参数变量，传参 
+                  （4）shell已经定义好的变量
+         显示所有的变量：set | grep 变量名
+         删除变量：    unset  或者关闭当前的会话
+         双引号和单引号：
+                   双引号会对变量进行解析   使用变量的时候
+                   单引号不会对变量进行解析 使用特殊的字符
+         shell常见的参数：
+                  $0 脚本文件名
+                  $1 第一个脚本位置参数
+                  $2 第二个脚本位置参数
+                  $3 第三个脚本位置参数
+                  ${10} 第10个脚本的位置
+                  $* 所有传递的脚本位置参数
+                  $@ 所有传递的脚本位置参数
+                  $# 总共传递的脚本参数
+                  $$ 当前程序运行的程序的pid
+                  $? 上一个命令执行返回的结果  执行成功为0，失败为非负
+                  $*和$@区别？
+                      不加引号：没区别
+                      加入引号后：$* 整体
+                                 $@ 分开
+                命令替换：
+                     $嵌套：  $(($(date +%Y))) + 1  $(()) 表示计算
+                       eg：  db=$(tar -czvf root.tar.gz $(find /root/ -name *.txt))
+                交互式的变量的获取的方式：
+                     read -p "提示信息"  var1
+
+                shell变量替换：
+                    url=www.sina.com.cn
+                    ${变量#匹配规则}：从头开始匹配，最短删除
+                    ${变量##匹配规则}：从头开始匹配，最长删除
+                    ${变量%匹配规则}：从尾部开始匹配，最短删除
+                    ${变量%%匹配规则}：从头开始匹配，最长删除
+                    ${变量/sina/baidu}
+                    www.sina ${url%%.*}
+                    www.sina.com ${url%.*}
+                 
+
+                 eg：
+                    （1）查看内存当前使用状态，如果使用率超过80%则报警发邮件
+                          free -m
+                          #!/bin/bash
+                          #监控内存百分比超过80%，进行报警
+                          free_use=$(free -m | grep ^M | awk '{print $3/$2*100}')
+                          result=${free_use%.*}
+                          echo $result
+                          if [ $result -gt 80 ];then
+                              echo "您的内存超过了80%，当前是: $result"
+                          else
+                              echo "您的内存使用率正常，当前是: $result"
+                          fi
+                    （2）在 /backup下创建10个.txt文件，找到/backup目录下所有后缀名为.txt的文件
+                          touch /root/backup/file{1..10}.txt
+                          1）批量修改txt为txt.bak  find /root/backup -iname "*.txt" | sed -r "s#(.*)#mv \1 \1.bak#" | bash
+                          2）把所有的.bak文件打包压缩为123.tar.gz  tar -czvf 123.tar.gz $(find /root/backup -iname "*.bak")
+                          3) 批量还原文件的名字，及把增加的.bak再删除
+                           find /root/backup -iname "*.bak" | sed -r "s#(.*).bak#mv \1.bak \1#" | bash
+
+
+                           eg:
+                            find /root/backup/ -iname "*.txt" | sed -r "s#(.*)#mv \1 \1.bak#" | bash
+                            #将.bak为后缀的文件进行打包 123.tar.gz
+                            tar -czvf 123.tar.gz $(find /root/backup/ -iname "*.bak")
+                            #还原备份的名字
+                            find /root/backup/ -iname "*.bak" | sed -r "s#(.*).bak#mv \1.bak \1#" | bash
+
+
+                            #!/bin/bash
+                            for i in $(ls /root/photoes/*.jepg);do
+                                mv $i ${i%.*}.jpg
+                            done
+
+                            rename jepg jpg *.jepg
+
+                    （3）使用shell脚本打印，系统版本，内核版本，虚拟平台，静态主机名，eth0网卡ip地址，lo网卡ip地址
+                          系统版本：hostnamectl | grep System | awk -F: '{print $2}'
+                          内核版本：hostnamectl | grep Kernel | awk -F: '{print $2}'
+                          虚拟平台：hostnamectl  | grep Virtualization | awk '{print $2}'
+                          静态主机名：hostnamectl  | grep "Static hostname" | awk '{print $3}'
+                          eth0网卡ip地址：ip addr | grep eth0 | awk 'NR==2{print $2}'
+                          lo网卡ip地址：ip addr |grep lo | awk 'NR==3{print $2}'
+  
+       sed：编辑器
+          sed：Stream EDitor，行编辑器：
+
+          sed [OPTION]... {script-only-if-no-other-script} [input-file]...
+
+          工作模式：不进行就地编辑，行编辑器，一次只处理一行的文本。一次从文件中读取一行，将其读取到自己的缓冲区中（pattern space）。
+          无论是否是编辑了，都会将结果打印到屏幕。
+
+              script
+                  '地址命令'
+              常用选项：
+                  -n  --quiet --silent  显示脚本执行后的结果
+                  -e  --script  实现多点编辑功能
+                  -f  /PATH/TO/SCRIPT_FILE 从指定文件中读取脚本
+                  -r  使用扩展的正则表达式
+                  -i in place 表示可以在源文件编辑
+
+              地址定界：
+                 （1）不给地址：对每一行进行处理
+                 （2）单地址：
+                       #  指定的行
+                       /pattern/ 被此处模式所能够匹配到的每一行
+                 （3）地址范围：
+                       #,#
+                       #,+#
+                       /pat1/,/pat2/
+                       #,/pat1/
+
+
+                eg：将/etc/fstab中的UUID的行进行删除显示
+                    sed '/^UUID/d'  /etc/fstab
+                    删除#号开头的行
+                    sed '/^#/d'      /etc/fstab
+                    删除空白行
+                    sed '/^$/d'     /etc/fstab
+                    第一行到第四行删除
+                    sed '1,4d' /etc/fstab
+                编辑命令：
+                    删除：d
+                    打印当前模式空间：p  sed '/^UUID/p' /etc/fstab
+                    追加：符合文本的行加上文本  a \ 'text' \n 追加多行   sed '/^UUID/a \ hello sed' /etc/fstab
+                    插入：i \'text'  在符合的文本前面追加   sed '/^UUID/i \ hello sed' /etc/fstab
+                    修改：c \ 'text' 替换符合条件的行     sed '/^UUID/c \ hello sed' /etc/fstab 
+                    备份：sed '/^UUID/w   /root/fstab.txt' /etc/fstab
+                    读取指定路径文本  sed '6r /etc/issue' /etc/fstab  将/etc/issue中的文件内容放到第六行的后面
+                    为符合条件的行打印行号：= sed '/^UUID/=' /etc/fstab
+                    取反条件： !  sed '/^UUID/!d'  /etc/fstab 对地址定界取反
+                    查找替换：s 支持使用其他分隔符 s### s@@@ s///
+                            替换标记：
+                                    g：行内全局替换
+                                    i：忽略字符的大小写
+                                    p：显示替换成功的行
+                                    w：将匹配替换后的结果保存到指定的文件中
+                            eg： sed  's/^UUID/uuid/' /etc/fstab   将UUID替换为uuid
+                                 sed 's/r..t/&er/' /etc/passwd   引用
+                                 sed 's/r..t/&er/g' /etc/passwd  匹配行全局替换                         
+           练习：删除/boot/grub2.cfg文件中所有以空白开头的行行首的空白字符
+                 sed 's/^[[:space:]]\+//' /etc/grub2.cfg
+           练习：删除/etc/fstab文件中所有以#开头，后面至少跟一个空白字符的行的行首的#和空白字符
+                 sed 's/^#[[:space:]]\+//' /etc/fstab
+           练习：echo一个绝对路径给sed命令，取出其基名，取出其目录名
+                 echo "/etc/sysconfig/" | sed 's@[^/]\+/\?$@@'
+                 [^/] 非路径
+                 \? 可有可无防止出现输入的是 /etc/sysconfig/
+                 $结尾开始匹配
+                 echo "/etc/sysconfig/" | sed 's@[^/]\+/\?$@@'
+                 基名：利用grep实现
+                 echo "/usr/local/bin/" | grep -o '[^/]\+/\?$' | cut -d '/' -f 1
+                 echo "/etc/sysconfig/" | sed '!s@[^/]\+/\?$@@'
+          sed高阶使用：
+          h：将模式空间中的覆盖至保持空间中
+          H：将模式空间中的内容追加至保持空间中
+          g：从保持空间中取出数据覆盖至模式空间
+          G：从保持空间取出内容追加至模式空间中
+          x：把模式空间中和保持空间中的内容进行互换
+          n：读取匹配到的行的下一行到模式空间
+          N：追加匹配到的行的下一行到模式空间
+          d：删除模式空间中的行
+          D：删除多行模式空间中的所有的行
+
+          sed命令中有着保持空间和模式空间，一般来说对于不适用sed的高级命令的时候是不会使用到保持空间的。
+                 保持空间：相当于是仓库，进行数据处理的时候作为数据的暂存区域
+                 模式空间：可以想象成工程中的流水线，数据之间在模式空间上进行处理
+
+          sed执行一般是将待处理的文本每一行读入模式空间，使用脚本的sed command命令一条接着一条进行处理，直到脚本执行完毕。然后模式空间清空，
+          接着重复上述的动作。
+          多个处理命令
+               sed -n 'n;p' FILE 显示偶数行   先去找奇数行，发现可以匹配，然后读进来下一行进行覆盖。p进行打印 -n表示不将模式空间的内容进行打印
+               sed '1!G;h;$!d' test.txt  逆向显示文本的内容
+               sed '$!N;$!D' FILE  取文件的后两行
+               sed '$!d' FILE  取出文件的最后一行
+               sed 'G' FILE  添加空白行
+               sed 'g' FILE  全为空白行
+               sed '/^$/d;G' FILE 每行添加一个空白行，如果有多个，就合成一个空白行。
+               sed 'n;d' FILE  显示奇数行
+               sed -n '1!G;h;$p' FILE 逆序显示
+
+          步进：
+              sed -n '1~2p' test.txt  显示奇数行
+              sed -n '2~2p' test.txt  显示偶数行
+
+
+
+
+
+
+
+
