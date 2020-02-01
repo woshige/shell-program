@@ -46,9 +46,83 @@ while循环
 		    echo "the second parameter is $2"
 		}
 		function_01  hello  shell
+	   函数状态返回值
+	            echo：返回任何字符串的值
+	            return ：1-255的返回值，通常用来供其他地方调用获取状态，一般返回的是0或者是1
+                return要放在后面
+                #!/bin/bash
+				function_echo_return(){
+				     echo 100
+				     return 1
+				}
+				result=`function_echo_return`
+				echo "函数的返回值为：$?"
+				echo "函数的返回内容：$result"
+				f=$(function_echo_return)
+				echo "f为 $f"
 
+
+
+				#!/bin/bash
+				file=/etc/passwd
+				t_file(){
+				 if [ -f $file ];then
+				      return 20
+				 else
+				      return 30
+				 fi
+				}
+				t_file
+				if [ $? -eq 20 ];then
+				    echo "文件存在"
+				else
+				    echo "文件不存在"
+				fi
 数组：
   1）什么是数组
+       就是变量：传统的变量只能存储一个值，但是数组可以存储多个值
   2）数组的分类
+        普通数组和关联数组
   3）普通数据和关联数组的定义和使用
+   定义：
+            方式1：var=(linux shell nginx java) 
+            或者
+		    方式2        
+		           var[0]=linux
+		           var[1]=shell
+		           var[3]=java
+            使用  
+                echo ${var[0]}  第一个
+                echo ${var[*]}  所有
+                echo ${var[@]}  所有
+                echo ${!var[@]} 取下标
+                echo ${#var[*]} 取个数
+           关联数组：相当于是字典
+                info=([name]=slc [age]=18 [skill]=program)
+                关联数组的定义需要先声明
+                declare -A info
+                info=([name]=slc [age]=18 [skill]=program)
+                echo ${info[age]}
+                echo ${info[*]}
+                echo ${!info[*]}
+                echo ${#info[*]}
+                或者是
+                declare -A info2
+                info2[index1]=slc
+                info2[index2]=18
+                info2[index3]=program
   4）批量和数组进行赋值
+
+
+
+           数组的遍历和循环
+              普通数组遍历
+                    #!/bin/bash
+					while read line
+					do
+					  array[i++]=$line
+					done</etc/passwd
+					for i in ${!array[*]}
+					do
+					     echo "数组索引为 $i 的值为： ${array[$i]}"
+					done
