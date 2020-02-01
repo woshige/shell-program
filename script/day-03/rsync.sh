@@ -23,4 +23,4 @@ elif [ $1 == "stop" ];then
 else 
      echo "usage: option:[start|stop]"
      exit 1
-fi
+fs
