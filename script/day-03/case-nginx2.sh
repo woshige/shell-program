@@ -31,7 +31,7 @@ case $rc in
             ;;
      reload)
             if [ -f $NGINX_HOME/logs/nginx.log ];then
-                 $NGINX_HOME/sbin/nginx -t &> /dev/null
+               $NGINX_HOME/sbin/nginx -t &> /dev/null
                if [ $? -eq 0 ];then
                  $NGINX_HOME/sbin/nginx -s reload
                  if [ $? -eq 0 ];then
@@ -40,8 +40,19 @@ case $rc in
                     action "nginx服务reloade失败" /bin/false
                  fi
                else
-                $NGINX_HOME/sbin/nginx -t 
-                echo "是否要进入配置文件进行编辑:[y|n]" 
+                $NGINX_HOME/sbin/nginx -t &> $NGINX_HOME/logs/err.txt
+                NGINX_CONF=$(awk -F "[: ]" 'NR==1{print $(NF-1)}'  $NGINX_HOME/logs/err.txt)
+                NGINX_LINE=$(awk -F "[: ]" 'NR==1{print $(NF)}'  $NGINGX_HOME/logs/err.txt)
+                read -p "是否要进入配置文件进行修改？[y|n]" re
+                case $re in
+                      y|yes|Y|YES)
+                            vim +$(NGINGX_LINE)  $NGINX_CONF
+                            ;;
+                      n|no|NO|N)
+                            echo "你可以选择手动修改，再见"
+                            ;; 
+                      *)
+                            echo "Usage: $0 {y|n}"
                fi
             else 
                     action "nginx服务没有启动"    /bin/false
