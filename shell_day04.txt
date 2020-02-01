@@ -1,0 +1,227 @@
+jumpserver 脚本
+#!/bin/bash
+info(){
+cat << EOF
+------------------------
+|  1) 192.168.182.101  |
+|  2) 192.168.182.102  |
+|  3) 192.168.182.103  |
+|  h) help             |
+------------------------
+EOF
+}
+info
+while true
+do
+ read -p "请输入您想要执行的选项 [1|2|3|h]" option
+ case $option in
+           1)
+              ssh root@192.168.182.101
+              ;;
+           2)
+              ssh root@192.168.182.102
+              ;;
+           3)
+              ssh root@192.168.182.103
+              ;;
+           h)
+              clear
+              info
+              ;;
+           *)
+             echo "usage: $0 [1|2|3|h]"
+ esac
+done
+for循环
+       for 变量名 in [取值列表]
+       do
+          循环体
+       done
+
+   eg:  #!/bin/bash
+		for file in $(ls /root/ | grep file)
+		do
+		  cat $file
+		done
+    指定分隔符
+            #!/bin/bash
+			for i in 1 2 3 4 5
+			do
+			   echo $i
+			done
+			for j in {1..100}
+			do
+			   echo $j
+			done
+			## 按照分号作为分隔符  IFS来设定
+			IFS=$'\n'
+			for i in `cat /etc/hosts`
+			do
+			   echo $i
+			done
+    创建如下文件中的用户和密码（通过user.txt）创建
+    user01:slc19980514
+        #!/bin/bash
+		for i in $(cat /root/user.txt)
+		do
+		  username=$(echo $i | cut -d : -f 1)
+		  passwd=$(echo $i | cut -d : -f 2)
+		  echo "$username ----   $passwd"
+		  id $username &> /dev/null
+		  if [  $? -eq 0 ];then
+		      echo "用户已存在"
+		      echo $passwd | passwd --stdin $username &> /dev/null
+		      echo "密码已经修改"
+		  else
+		      useradd $username
+		      echo $passwd | passwd --stdin $username &> /dev/null
+		      echo "$username 用户已创建，密码已经生成"
+		  fi
+		done
+    批量的创建用户
+           #!/bin/bash
+			for i in $(cat /root/user.txt)
+			do
+			  useradd $i &> /dev/null
+			  if [ $? -eq 0 ];then
+			     echo "$i 已经创建成功"
+			  else
+			     echo "$i 已经存在"
+			  fi
+			done
+    read -p 批量创建用户脚本，需要用户输入创建的数量以及需要创建的前缀，例如slc
+        #!/bin/bash
+		read -p "请输入你要创建的用户的个数:" num
+		read -p "请输入你要创建的用户的前缀:" prefix
+		if [ $num -eq 0 ];then
+		   echo "没有创建任何用户"
+		fi
+		for i in $(seq $num)
+		do
+		     echo ${prfix}${i}
+		     id ${prefix}${i} &> /dev/null
+		     if [ $? -eq 0 ];then
+		        echo "该用户已经存在"
+		     else
+		        useradd ${prefix}${i} &> /dev/null
+		     fi
+		done
+
+
+
+
+		严谨版创建用户：
+
+		        #!/bin/bash
+				if [ ! $UID -eq 0 -o ! $USER == 'root' ];then
+				     echo "您当前不是root用户"
+				     exit 1
+				fi
+				read -p "请输入你要创建的用户前缀" prefix
+				if [ -z $prefix ];then
+				  echo "请输入有效值"
+				  exit 1
+				fi
+				read -p "请输入你要创建的用户数量" num
+				if [[ $num =~ ^[0-9]+$ ]];then
+				  echo "请输入整数"
+				  exit 1
+				fi
+				echo "你要创建的用户是${prefix}1..${prefix}${num}"
+				read -p "你要创建的用户如下，你确定要创建吗？[y | n]" option
+				case $option in
+				       y | Y | yes | YES)
+				                        for i in $(seq $num)
+				                        do
+				                        username=${prfiex}${i}
+				                        id $username &> /dev/null
+				                        if [ $? -eq 0 ];then
+				                            echo "$username 已经存在"
+				                        else
+				                            useradd $username
+				                            echo "$username 已经创建完毕"
+				                        fi
+				                        done
+				                        ;;
+				       n | N | no  | NO)
+				                        ;;
+				       *)
+				esac
+	    创建用户使用随机密码：
+	        #!/bin/bash
+			if [ ! $UID -eq 0 -o ! $USER == 'root' ];then
+			     echo "您当前不是root用户"
+			     exit 1
+			fi
+			read -p "请输入你要创建的用户前缀" prefix
+			if [ -z $prefix ];then
+			  echo "请输入有效值"
+			  exit 1
+			fi
+			read -p "请输入你要创建的用户数量" num
+			if [[ $num =~ ^[0-9]+$ ]];then
+			  echo "请输入整数"
+			  exit 1
+			fi
+			echo "你要创建的用户是${prefix}1..${prefix}${num}"
+			read -p "你要创建的用户如下，你确定要创建吗？[y | n]" option
+			case $option in
+			       y | Y | yes | YES)
+			                        for i in $(seq $num)
+			                        do
+			                        username=${prfiex}${i}
+			                        id $username &> /dev/null
+			                        if [ $? -eq 0 ];then
+			                            echo "$username 已经存在"
+			                        else
+			                            useradd $username
+			                            echo $RANDOM | md5sum | cut -c 2-10 | passwd --stdin $username
+			                            echo "$username 已经创建完毕"
+			                        fi
+			                        done
+			                        ;;
+			       n | N | no  | NO)
+			                        ;;
+			       *)
+			esac
+
+	    批量删除用户
+	            #!/bin/bash
+				read -p "请输入需要删除的用户的前缀：" prefix
+				read -p "请输入你要删除的用户的数量：" num
+				read -p "请确认你真的要删除此用户吗？[y|n]" option
+				case $option in
+				           y | Y | yes | YES)
+				                            for i in $(seq $num)
+				                            do
+				                                username=${prefix}${i}
+				                                id $username &> /dev/null
+				                                if [ $? -eq 0 ];then
+				                                    userdel -r $username
+				                                    echo "用户$username已经成功删除"
+				                                else
+				                                    echo "用户$username 不存在"
+				                                fi
+				                            done
+				                            ;;
+				           n | N | no  | NO )
+				                            echo "已经停止删除"
+				                            ;;
+				           *)
+				            echo "usage: $0 [y|n]"
+				esac
+        测试其他主机是否能ping通1-254
+		        #!/bin/bash
+				for i in  {1..254}
+				do
+				 {
+				  ping -c 1 -w 1 192.168.182.${i} &> /dev/null
+				  if [ $? -eq 0 ];then
+				     echo "192.168.182.${i} 能够ping通"
+				  else
+				     echo "192.168.182.${i} 不能够ping通" 
+				  fi
+				  } &
+				done
+				wait
+				echo "ip is down"

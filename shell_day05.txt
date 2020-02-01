@@ -1,0 +1,54 @@
+while循环
+  eg：   
+        #!/bin/bash
+		i=0
+		while  [ $i -lt 10 ]
+		do
+		   echo 123
+		   let i++
+		done
+  实例：利用while批量创建用户
+        #!/bin/bash
+		while read userinfo
+		do
+		  username=$(echo $userinfo | cut -d : -f 1)
+		  passwd=$(echo $userinfo | cut -d : -f 2)
+		  echo $username
+		  echo $passwd
+		  id $username &> /dev/null
+		  if [ $? -eq 0 ];then
+		     echo "$username 用户已存在"
+		  else
+		     useradd $username
+		     echo $passwd | passwd -stdin $username &> /dev/null
+		     echo "$username 用户已创建完毕"
+		  fi
+		done</root/user.txt
+函数：
+  1）定义函数
+  2）调用函数
+  3）传递参数
+  4）函数的返回值
+       使用：
+       function function_name(){
+          command1..
+          command2..
+       }
+       function function_name{
+          command1..
+          command2..
+       }
+       如何传递参数：
+       
+		#!/bin/bash
+		function function_01(){
+		    echo "the first parameter is $1"
+		    echo "the second parameter is $2"
+		}
+		function_01  hello  shell
+
+数组：
+  1）什么是数组
+  2）数组的分类
+  3）普通数据和关联数组的定义和使用
+  4）批量和数组进行赋值

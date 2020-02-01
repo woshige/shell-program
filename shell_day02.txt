@@ -221,6 +221,5 @@
 	        根据不同系统的版本来安装不同的yum源
 	        version=$(awk '{print $(NF - 1)}' /etc/redhat-release)
 	        echo ${version%%.*}
-	    例子：安装不同版本的PHP
-	         选择的过程，
+	    
 
